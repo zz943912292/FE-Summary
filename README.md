@@ -38,15 +38,15 @@ Array.isArray()   返回布尔
 Html5标准模式 <!DOCTYPE html>  
 
 2. TCP和UDP  
-| | TCP | UDP |  
-| :---- | :---- | :---- |  
+
+|  | TCP | UDP |  
+| ---- | ---- | ---- |  
 | 是否连接 | 面向连接 | 无连接 |  
 | 是否可靠 | 可靠传输， 流量控制和拥塞控制 | 不可靠传输 |  
 | 连接对象个数 | 一对一 | 一对一，一对多，多对多 |  
 | 传输方式 | 面向字节流 | 面向报文 |  
 | 首部开销 | 20-60字节 | 8字节 |  
 | 使用场景 | 实时应用（IP电话，视频会议，直播等） | 要求可靠传输的应用（文件传输等）|  
-
 
 ## CSS
 1. Css优先级 https://developer.mozilla.org/zh-CN/docs/Web/CSS/Specificity  
@@ -63,7 +63,7 @@ overflow：hidden, auto 构成BFC清除浮动
 1. react setState什么时候同步什么时候异步，为什么？  
 由React控制的事件处理程序，以及生命周期函数调用setState不会同步更新state 。  
 componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)），这两种方式都可以保证在应用更新后触发。
-**React控制之外的事件中调用setState是同步更新的。比如原生js绑定的事件，setTimeout/setInterval等。**  
+***React控制之外的事件中调用setState是同步更新的。比如原生js绑定的事件，setTimeout/setInterval等。***  
 
 2. hook使用规则：  
 只能在函数最外层调用，不能在循环、条件和子函数中使用。  
@@ -77,7 +77,7 @@ componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)
 因为State是只读的，不能直接修改，需要传递action表明修改意图，然后集中处理这些意图。  
 
 5. React事件处理使用箭头函数，如果作为子组件嵌套，跟随父组件更新每次创建一个新的函数影响性能。  
-使用**class fields**方法可以避免这类性能问题。  
+使用***class fields***方法可以避免这类性能问题。  
 
 
 
