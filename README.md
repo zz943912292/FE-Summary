@@ -150,3 +150,102 @@ content为文本标注内容，一般使用HTML元素
 对map和覆盖物都可以使用on,off成员实现事件绑定和移除  
 on( eventName, handler, context)  
 off( eventName, handler, context)  
+
+
+### 图表地图绘制
+
+准备：
+1. 可视化库：Antv.L7(React支持更好)或Echarts  
+2. geoJson：地理交互数据，用于分隔区域  
+  世界地图和全国地图都很容易下载  
+  可从阿里云获取详细的全国地图，精确到区县 http://datav.aliyun.com/tools/atlas  
+3. 地图底图：可通过高德地图或MapBox加载
+  也可设置map的属性style='blank'不使用底图，离线加载
+
+React+Antv.L7的具体代码：  
+需要一个空的div渲染地图，设置宽高  
+```javascript
+import { AMapScene, LineLayer, MapboxScene, PolygonLayer } from '@antv/l7-react';
+import * as React from 'react';
+import ReactDOM from 'react-dom';
+
+const World = React.memo(function Map() {
+  const [ data, setData ] = React.useState();
+  React.useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch(
+        'https://gw.alipayobjects.com/os/basement_prod/68dc6756-627b-4e9e-a5ba-e834f6ba48f8.json'
+      ); 
+      const data = await response.json(); // 获取geoJson，也可以使用本地的geoJson
+      setData(data);
+    };
+    fetchData();
+  }, []);
+  return (
+    <MapboxScene // 地图场景
+      map={{
+        center: [ 0.19382669582967, 50.258134 ],
+        pitch: 0,
+        style: 'blank', // 无底图
+        zoom: 6
+      }}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
+      }}
+    >
+      {data && [
+        <PolygonLayer // 面图层，区域填充颜色
+          key={'2'}
+          options={{
+            autoFit: true
+          }}
+          source={{
+            data
+          }}
+          color={{
+            field: 'name',
+            values: [
+              '#2E8AE6',
+              '#69D1AB',
+              '#DAF291',
+              '#FFD591',
+              '#FF7A45',
+              '#CF1D49'
+            ]
+          }}
+          shape={{
+            values: 'fill'
+          }}
+          style={{
+            opacity: 1
+          }}
+          select={{
+            option: { color: '#FFD591' }
+          }}
+        />,
+        <LineLayer // 线图层，划分区域界限
+          key={'21'}
+          source={{
+            data
+          }}
+          color={{
+            values: '#fff'
+          }}
+          shape={{
+            values: 'line'
+          }}
+          style={{
+            opacity: 1
+          }}
+        />
+      ]}
+    </MapboxScene>
+  );
+});
+
+ReactDOM.render(<World/>, document.getElementById('map')); // 将地图渲染到DOM中
+```
