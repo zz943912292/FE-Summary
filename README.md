@@ -1,3 +1,14 @@
+- [FE-Summary](#fe-summary)
+  - [JS](#js)
+  - [HTML](#html)
+  - [CSS](#css)
+  - [React](#react)
+  - [其他](#%e5%85%b6%e4%bb%96)
+    - [高德地图 TODO:补充完整demo](#%e9%ab%98%e5%be%b7%e5%9c%b0%e5%9b%be-todo%e8%a1%a5%e5%85%85%e5%ae%8c%e6%95%b4demo)
+      - [API](#api)
+    - [AntV可视化解决方案](#antv%e5%8f%af%e8%a7%86%e5%8c%96%e8%a7%a3%e5%86%b3%e6%96%b9%e6%a1%88)
+    - [图表地图绘制](#%e5%9b%be%e8%a1%a8%e5%9c%b0%e5%9b%be%e7%bb%98%e5%88%b6)
+
 # FE-Summary
 
 ## JS
@@ -152,13 +163,124 @@ on( eventName, handler, context)
 off( eventName, handler, context)  
 
 
-### 图表地图绘制
+### AntV可视化解决方案  
+在React项目中进行可视化工作，考虑到对React的友好性，没有使用Echarts，选择了AntV  
+分别使用G2做图表可视化，L7做地理空间可视化  
+[L7的介绍点这里](#map)  
+这节主要介绍G2的使用，在React的技术栈中，官方推荐使用BizCharts，它是对G2的React版本封装，由阿里维护  
+
+在BizCharts中渲染一个图表需要一个\<Chart\/\>组件  
+\<Chart\/\>的属性主要包括：  
+
+> width, height 宽高  
+> data 数据源，后面会详细介绍  
+> scape 数据比例尺  
+> forceFit 宽度自适应，默认false  
+> padding 调整解决图表不全的问题  
+
+\<Chart\/\>中主要的子组件：  
+
+> \<Coord\/\> 默认笛卡尔坐标系，可设置为极坐标系，简单理解方的图表用笛卡尔，圆的用极坐标  
+> \<Axis\/\> 坐标轴（包括图表中的网格线），默认不显示  
+> \<Geom\/\> 几何标记，即图表中的主要内容，可以是点线面等  
+> \<Label\/\> 几何标记上的文本，必须是\<Geom\/\>的子组件  
+> \<Tooltip\/\> 鼠标悬停在某点时该点的数据  
+> \<Legend\/\> 图例，显示数据类型和进行数据筛选  
+
+看一个简单的柱状图例子吧  
+```javascript
+  import { G2, Chart, Geom, Axis, Tooltip, Coord, Label, Legend, } from "bizcharts";
+  // 数据源
+  function App() {
+    const data = [
+      { genre: 'Sports', sold: 275, income: 2300 },
+      { genre: 'Strategy', sold: 115, income: 667 },
+      { genre: 'Action', sold: 120, income: 982 },
+      { genre: 'Shooter', sold: 350, income: 5271 },
+      { genre: 'Other', sold: 150, income: 3710 }
+    ];
+
+    // 定义度量
+    const cols = {
+      sold: { alias: '销售量' },
+      genre: { alias: '游戏种类' }
+    };
+
+    return (
+      <div>
+        <Chart width={600} height={400} data={data} scale={cols} padding={[80, 100, 80, 80]}>
+          <Axis name="genre" title/>
+          <Axis name="sold" title/>
+          <Legend position="top" dy={-20} />
+          <Tooltip />
+          <Geom type="interval" position="genre*sold" color="genre" />
+        </Chart>
+      </div>
+    );
+  }
+```  
+配合图片食用  
+![G2](./g2.png "G2")  
+
+对于数据源的处理  
+BizCharts支持两种格式的数据源  
+1. json数组
+2. DataView对象，即DataSet.View，由@antv/data-set获取，DataSet可接入多种数据类型，包括csv，geoJson等，查看详情 https://bizcharts.net/product/bizcharts/category/12/page/18  
+
+可以通过DataView.transform对数据源进行变换，使数据便于图表展示，比如：  
+filter 数据过滤  
+```javascript
+  dv.transform({
+    type: 'filter',
+    callback(row) { // 判断某一行是否保留，默认返回true
+      return row.year > 1998;
+    }
+  });
+```  
+
+fold 字段展开  
+```javascript
+  const data = [
+    { country: "USA", gold: 10, silver: 20 },
+    { country: "Canada", gold: 7, silver: 26 }
+  ];
+  const dv = ds.createView()
+    .source(data)
+    .transform({
+      type: 'fold',
+      fields: [ 'gold', 'silver' ], // 展开字段集
+      key: 'key',                   // key字段
+      value: 'value',               // value字段
+      retains: [ 'country' ]        // 保留字段集，默认为除 fields 以外的所有字段
+    });
+  /*
+  dv.rows 变为
+  [
+    { key: gold, value: 10, country: "USA" },
+    { key: silver, value: 20, country: "USA" },
+    { key: gold, value: 7, country: "Canada" },
+    { key: silver, value: 26, country: "Canada" }
+  ]
+  */
+```  
+更多用法 https://bizcharts.net/product/bizcharts/category/7/page/39
+
+图表事件交互  
+在\<Chart\/\>或\<Geom\/\>上的添加  
+\<Chart\/\>根据图表元素和基础事件自由组合出22*10种事件类型  https://bizcharts.net/product/bizcharts/category/7/page/66  
+\<Geom\/\>上有默认的hover样式，可以通过active布尔值开启和关闭，也可通过select设置选中模式  
+
+
+<span id="map"></span>
+
+### 图表地图绘制  
 
 准备：
 1. 可视化库：Antv.L7(React支持更好)或Echarts  
 2. geoJson：地理交互数据，用于分隔区域  
   世界地图和全国地图都很容易下载  
   可从阿里云获取详细的全国地图，精确到区县 http://datav.aliyun.com/tools/atlas  
+  可通过turf.js编辑geoJson，自定义区域  
 3. 地图底图：可通过高德地图或MapBox加载
   也可设置map的属性style='blank'不使用底图，离线加载
 
