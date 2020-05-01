@@ -3,6 +3,7 @@
   - [HTML](#html)
   - [CSS](#css)
   - [React](#react)
+  - [TS](#ts)
   - [其他](#%e5%85%b6%e4%bb%96)
     - [高德地图 TODO:补充完整demo](#%e9%ab%98%e5%be%b7%e5%9c%b0%e5%9b%be-todo%e8%a1%a5%e5%85%85%e5%ae%8c%e6%95%b4demo)
       - [API](#api)
@@ -70,6 +71,53 @@ overflow：hidden, auto 构成BFC清除浮动
 原因：BFC的区域不会与box重叠， 独立布局环境  
 创建BFC方法：float;  position:fixed, absolute; overflow:hidden, auto; display:inline-block, flex  
 
+3. Sass基本用法
+   1. 变量：以$开头，如果变量需要镶嵌在字符串之中，就必须需要写在#{}之中  
+   ```Scss
+   $side : left;
+   rounded {
+     border-#{$side}-radius: 5px;
+   }
+   ```
+   2. 计算功能：  
+   ```Scss
+   body {
+     top: 50px + 100px;
+     right: $var * 10%;
+   }
+   ```
+   3. 嵌套：在嵌套的代码块内，可以使用&引用父元素，比如:hover伪类
+   ```Scss
+   div {
+     h1 {
+       color: blue;
+     }
+     &:hover {
+       color: red;
+     }
+   }
+   ```
+   4. 继承：@extend  
+   ```Scss
+   .class1 {
+     color: blue;
+   }
+   .class2 {
+     @extend class1;
+     font-size: 12px;
+   }
+   ```
+   5. 重用：@mixin定义一个可以重用的代码块，@include调用mixin，mixin还可以指定参数  
+   ```Scss
+   @mixin left($value: 10px) {
+     float: left;
+     margin-right: $value;
+   }
+   div {
+     @include left(20px);
+   }
+   ```
+
 ## React
 1. react setState什么时候同步什么时候异步，为什么？  
 由React控制的事件处理程序，以及生命周期函数调用setState不会同步更新state 。  
@@ -90,6 +138,16 @@ componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)
 5. React事件处理使用箭头函数，如果作为子组件嵌套，跟随父组件更新每次创建一个新的函数影响性能。  
 使用***class fields***方法可以避免这类性能问题。  
 
+## TS  
+1. 高级类型  
+   1. 交叉类型： T & U 类型的对象同时拥有T和U两种类型的成员  
+   2. 联合类型： T | U 类型的对象是T类型或U类型  
+   3. 类型别名： type 类型别名和接口很像，但是可以作用于原始值，联合类型，元组以及其它任何你需要手写的类型，类型别名不会新建一个类型 - 它创建了一个新 名字来引用那个类型  
+   5. Omit：从原类型中删除一些属性来创建一个新类型。
+   ```Javascript
+    type QuantumPerson = Omit<Person, "location">;
+   ```
+   QuantumPerson从Person中删除了"location"属性  
 
 
 
