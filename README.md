@@ -103,7 +103,7 @@ overflow：hidden, auto 构成BFC清除浮动
      color: blue;
    }
    .class2 {
-     @extend class1;
+     @extend .class1;
      font-size: 12px;
    }
    ```
