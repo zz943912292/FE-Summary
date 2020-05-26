@@ -4,11 +4,11 @@
   - [CSS](#css)
   - [React](#react)
   - [TS](#ts)
-  - [其他](#%e5%85%b6%e4%bb%96)
-    - [高德地图 TODO:补充完整demo](#%e9%ab%98%e5%be%b7%e5%9c%b0%e5%9b%be-todo%e8%a1%a5%e5%85%85%e5%ae%8c%e6%95%b4demo)
+  - [其他](#其他)
+    - [高德地图](#高德地图)
       - [API](#api)
-    - [AntV可视化解决方案](#antv%e5%8f%af%e8%a7%86%e5%8c%96%e8%a7%a3%e5%86%b3%e6%96%b9%e6%a1%88)
-    - [图表地图绘制](#%e5%9b%be%e8%a1%a8%e5%9c%b0%e5%9b%be%e7%bb%98%e5%88%b6)
+    - [AntV可视化解决方案](#antv可视化解决方案)
+    - [图表地图绘制](#图表地图绘制)
 
 # FE-Summary
 
@@ -41,6 +41,95 @@ Array.isArray()   返回布尔
   moment.isBefore(), moment.isAfter() // 判断，返回Boolean
 ```
 
+5. 异步网络请求 xhr, ajax -> fetch, axios  
+
+   1. XMLHttpRequest对象  
+      现代浏览器，最开始与服务器交换数据，都是通过XMLHttpRequest对象。它可以使用JSON、XML、HTML和text文本等格式发送和接收数据。  
+      ```javascript
+      if (window.XMLHttpRequest) { // model browser
+      xhr = new XMLHttpRequest()
+      } else if (window.ActiveXObject) { // IE 6 and older
+        xhr = new ActiveXObject('Microsoft.XMLHTTP')
+      }
+      xhr.open('POST', url, true)
+      xhr.send(data)
+      xhr.onreadystatechange = function () {
+        try {
+          // 处理响应
+          if (xhr.readyState === 4) {
+            // 请求正常
+            if (xhr.status === 200) {
+              // 处理响应
+            } else {
+              // 请求遇到一些问题，处理异常
+            }
+          } else {
+            // 还处于未准备好的状态
+          }
+        } catch (e) {
+          // 通信错误的事件中（例如服务器宕机）
+          alert('Caught Exception: ' + e.description)
+        }
+      }
+      ```
+      优点  
+        * 不重新加载页面的情况下更新网页  
+        * 在页面已加载后从服务器请求/接收数据  
+        * 在后台向服务器发送数据  
+
+      缺点  
+        * 使用起来也比较繁琐，需要设置很多值  
+        * 早期的IE浏览器有自己的实现，这样需要写兼容代码  
+   2.  jQuery ajax  
+   
+        ```javascript
+        $.ajax({
+          type: 'POST',
+          url: url, 
+          data: data,
+          dataType: dataType,
+          success: function () {},
+          error: function () {}
+        })
+        ```  
+        优点  
+          * 对原生XHR的封装，做了兼容处理，简化了使用   
+          * 增加了对JSONP的支持，可以简单处理部分跨域  
+
+        缺点  
+          * 如果有多个请求，并且有依赖关系的话，容易形成回调地狱  
+          * ajax是jQuery中的一个方法。如果只是要使用ajax却要引入整个jQuery非常的不合理  
+   3. fetch  
+      Fetch API提供了一个 JavaScript 接口，用于访问和操作HTTP管道的部分，例如请求和响应。它还提供了一个全局 fetch() 方法，该方法提供了一种简单，合理的方式来跨网络异步获取资源  
+      Fetch 是底层API，代替XHR，可以轻松处理各种格式，非文本化格式。可以很容易的被其他技术使用，例如Service Workers。但是想要很好的使用Fetch，需要做一些封装处理  
+      ```javascript
+      fetch(url, {
+        method: 'post', 
+        body: {}
+      }).then(function() { /* handle response */ });
+      ```
+      优点  
+       * 返回Promise 
+
+      缺点  
+        * fetch只对网络请求报错，对400，500都当做成功的请求，需要封装去处理  
+        * fetch默认不会带cookie，需要添加配置项  
+        * fetch中止需要使用AbortController.abort()  
+   4. axios  
+      基于 promise 的 HTTP 库，对XML对象的封装，可以用在浏览器和 node.js 中  
+      ```javascript
+      axios({
+        method: 'GET',
+        url: url,
+      })
+      .then(res => {console.log(res)})
+      .catch(err => {console.log(err)})
+      ```
+      优点  
+       * 拦截请求和响应  
+       * 转换请求数据和响应数据  
+       * 取消请求  
+
 
 
 ## HTML
@@ -51,14 +140,14 @@ Html5标准模式 <!DOCTYPE html>
 
 2. TCP和UDP  
 
-|  | TCP | UDP |  
-| ---- | ---- | ---- |  
-| 是否连接 | 面向连接 | 无连接 |  
-| 是否可靠 | 可靠传输， 流量控制和拥塞控制 | 不可靠传输 |  
-| 连接对象个数 | 一对一 | 一对一，一对多，多对多 |  
-| 传输方式 | 面向字节流 | 面向报文 |  
-| 首部开销 | 20-60字节 | 8字节 |  
-| 使用场景 | 实时应用（IP电话，视频会议，直播等） | 要求可靠传输的应用（文件传输等）|  
+    |  | TCP | UDP |  
+    | ---- | ---- | ---- |  
+    | 是否连接 | 面向连接 | 无连接 |  
+    | 是否可靠 | 可靠传输， 流量控制和拥塞控制 | 不可靠传输 |  
+    | 连接对象个数 | 一对一 | 一对一，一对多，多对多 |  
+    | 传输方式 | 面向字节流 | 面向报文 |  
+    | 首部开销 | 20-60字节 | 8字节 |  
+    | 使用场景 | 实时应用（IP电话，视频会议，直播等） | 要求可靠传输的应用（文件传输等）|  
 
 ## CSS
 1. Css优先级 https://developer.mozilla.org/zh-CN/docs/Web/CSS/Specificity  
@@ -153,7 +242,7 @@ componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)
 
 ## 其他
 
-### 高德地图 TODO:补充完整demo
+### 高德地图
 #### API
 1. 创建地图  
 ```javascript
