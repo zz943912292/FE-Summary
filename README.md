@@ -130,6 +130,40 @@ Array.isArray()   返回布尔
        * 转换请求数据和响应数据  
        * 取消请求  
 
+6. 前端导入excel
+```javascript
+  const upload = (file) => {
+    const reader = new FileReader(); // 读取操作就是由它完成.
+    reader.readAsBinaryString(file); // 读取文件的内容,也可以读取文件的URL
+    reader.onload = (evt) => {
+      // 当读取完成后回调这个函数,然后此时文件的内容存储到了result中,直接操作即可
+      try {
+        const data = evt.target.result;
+        // 以二进制流方式读取得到整份excel表格对象
+        const workbook = XLSX.read(data, {
+          type: 'binary',
+        });
+        console.log(workbook);
+        let buildings = []; // 存储获取到的数据
+        let fromTo = '';
+        // 遍历每张表读取
+        // Object.keys(workbook.Sheets).forEach((sheet) => {
+        //   fromTo = workbook.Sheets[sheet]['!ref'];
+        //   buildings = buildings.concat(XLSX.utils.sheet_to_json(workbook.Sheets[sheet]));
+        // });
+        // 第一张表
+        fromTo = workbook.Sheets[Object.keys(workbook.Sheets)[0]]['!ref'];
+        buildings = buildings.concat(
+          XLSX.utils.sheet_to_json(workbook.Sheets[Object.keys(workbook.Sheets)[0]]),
+        );
+        console.log(buildings);
+      } catch (e) {
+        message.error('文件类型不正确', e);
+      }
+    };
+  };
+```
+
 
 
 ## HTML
