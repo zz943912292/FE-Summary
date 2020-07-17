@@ -259,14 +259,69 @@ componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)
 因为State是只读的，不能直接修改，需要传递action表明修改意图，然后集中处理这些意图。  
 
 5. React事件处理使用箭头函数，如果作为子组件嵌套，跟随父组件更新每次创建一个新的函数影响性能。  
-使用***class fields***方法可以避免这类性能问题。  
+使用***class fields***方法可以避免这类性能问题。 
+
+6. React Fiber  
+    Fiber全称Fiber reconciler, 从React 16开始变成了默认的reconciler。  
+    reconciliation（协调），也就是当我们调用render方法，或是框架检测到state或props变化后，便开始重新开始计算比对组件的前后状态，并渲染与之对应的改变的UI。https://zh-hans.reactjs.org/docs/reconciliation.html  
+    Fiber之前的stack reconciler不可中断，JS的长时间运行阻塞交互、动画等其他工作，导致掉帧。  
+    Fiber的主要目标：   
+      - 能够把可中断的任务切片处理。  
+      - 能够调整优先级，重置并复用任务。  
+      - 能够在父元素与子元素之间交错处理，以支持React中的布局。  
+      - 能够在render()中返回多个元素。  
+      - 更好地支持错误边界。
+ 
+    Fiber的特点：  
+      - 增量渲染（把渲染任务拆分成块，匀到多帧）  
+      - 更新时能够暂停，终止，复用渲染任务  
+      - 给不同类型的更新赋予优先级   
+      - 并发方面新的基础能力  
+
+    Fiber Tree  
+    Fiber之前React运行时存在三种实例
+      > DOM -- 真实DOM节点  
+      > Instances -- React维护的vDOM tree node  
+      > Elements -- 描述UI长什么样子（type, props）  
+    
+    Instances是根据Elements创建的，对组件及DOM节点的抽象表示，vDOM tree维护了组件状态以及组件与DOM树的关系。在首次渲染过程中构建出vDOM tree，后续需要更新时（setState()），diff vDOM tree得到DOM change，并把DOM change应用（patch）到DOM树。stack reconciler在需要更新时，对vDom tree进行自上而下的的递归，这一过程无法中断，显然不能满足Fiber的目标。  
+
+    为了实现增量更新，Instances层增加了实例：
+      > DOM -- 真实DOM节点   
+      > effect -- 存放diff结果  
+      > workInProgress -- workInProgress tree是reconcile过程中从fiber tree建立的当前进度快照，用于断点恢复  
+      > fiber tree -- 与vDOM tree类似  
+      > Elements -- 描述UI长什么样子（type, props）  
+    其中workInprogess和effect仅在更新时存在
+    
+    Fiber节点，实现了链表的树结构  
+    <img src="./fiber_node.png"/>  
+    Fiber reconciler 2个阶段  
+    阶段1 （可中断）render/reconciliation 通过构造workInProgress tree得出change  
+    阶段2 （不可中断）commit 应用这些DOM change  
+    render/reconciliation阶段 自顶而下遍历fiber tree构建workInProgress tree  
+    1. 如果当前节点不需要更新，直接把子节点clone过来，跳到5；要更新的话打个tag  
+    2. 更新当前节点状态（props, state, context等）  
+    3. 调用shouldComponentUpdate()，false的话，跳到5  
+    4. 调用render()获得新的子节点，并为子节点创建fiber（创建过程会尽量复用现有fiber，子节点增删也发生在这里）  
+    5. 如果没有产生child fiber，该工作单元结束，把effect list归并到return，并把当前节点的sibling作为下一个工作单元；否则把child作为下一个工作单元  
+    6. 如果没有剩余可用时间了，等到下一次主线程空闲时才开始下一个工作单元；否则，立即开始做  
+    7. 如果没有下一个工作单元了（回到了workInProgress tree的根节点），第1阶段结束，进入pendingCommit状态   
+
+    构建workInProgress tree的过程就是diff的过程，通过requestIdleCallback来调度执行一组任务，每完成一个任务后回来看看有没有插队的（更紧急的），每完成一组任务，把时间控制权交还给主线程，直到下一次requestIdleCallback回调再继续构建workInProgress tree  
+    comimit阶段 不中断直接完成  
+    处理effect list（包括3种处理：更新DOM树、调用组件生命周期函数以及更新ref等内部状态）  
+
+
+
+
 
 ## TS  
 1. 高级类型  
    1. 交叉类型： T & U 类型的对象同时拥有T和U两种类型的成员  
    2. 联合类型： T | U 类型的对象是T类型或U类型  
    3. 类型别名： type 类型别名和接口很像，但是可以作用于原始值，联合类型，元组以及其它任何你需要手写的类型，类型别名不会新建一个类型 - 它创建了一个新 名字来引用那个类型  
-   5. Omit：从原类型中删除一些属性来创建一个新类型。
+   4. Omit：从原类型中删除一些属性来创建一个新类型。
    ```Javascript
     type QuantumPerson = Omit<Person, "location">;
    ```
