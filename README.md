@@ -312,6 +312,18 @@ componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)
     comimit阶段 不中断直接完成  
     处理effect list（包括3种处理：更新DOM树、调用组件生命周期函数以及更新ref等内部状态）  
 
+    优先级策略  
+    每个工作单元运行有6种优先级：  
+    1. synchronous 与之前的Stack reconciler操作一样，同步执行  
+    2. task 在next tick之前执行  
+    3. animation 下一帧之前执行  
+    4. high 在不久的将来立即执行  
+    5. low 稍微延迟（100-200ms）执行也没关系  
+    6. offscreen 下一次render时或scroll时才执行  
+
+    synchronous首屏（首次渲染）用，要求尽量快，不管会不会阻塞UI线程。animation通过requestAnimationFrame来调度，这样在下一帧就能立即开始动画过程；后3个都是由requestIdleCallback回调执行的；offscreen指的是当前隐藏的、屏幕外的（看不见的）元素。  
+    高优先级的比如键盘输入（希望立即得到反馈），低优先级的比如网络请求，让评论显示出来等等。另外，紧急的事件允许插队。  
+
 
 
 
