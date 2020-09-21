@@ -261,9 +261,9 @@ componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)
 5. React事件处理使用箭头函数，如果作为子组件嵌套，跟随父组件更新每次创建一个新的函数影响性能。  
 使用***class fields***方法可以避免这类性能问题。 
 
-6. React Fiber  
+6. React Fiber  单处理器并发调度  
     Fiber全称Fiber reconciler, 从React 16开始变成了默认的reconciler。  
-    reconciliation（协调），也就是当我们调用render方法，或是框架检测到state或props变化后，便开始重新开始计算比对组件的前后状态，并渲染与之对应的改变的UI。https://zh-hans.reactjs.org/docs/reconciliation.html  
+    [reconciliation](https://zh-hans.reactjs.org/docs/reconciliation.html )（协调），也就是当我们调用render方法，或是框架检测到state或props变化后，便开始重新开始计算比对组件的前后状态，并渲染与之对应的改变的UI。 
     Fiber之前的stack reconciler不可中断，JS的长时间运行阻塞交互、动画等其他工作，导致掉帧。  
     Fiber的主要目标：   
       - 能够把可中断的任务切片处理。  
@@ -277,6 +277,11 @@ componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)
       - 更新时能够暂停，终止，复用渲染任务  
       - 给不同类型的更新赋予优先级   
       - 并发方面新的基础能力  
+
+    Fiber是什么？  
+    React Fiber 的思想和协程的概念是契合的: React 渲染的过程可以被中断，可以将控制权交回浏览器，让位给高优先级的任务，浏览器空闲后再恢复渲染。  
+    使用requestIdleCallback API实现，由于浏览器支持有限，React自己实现了它。  
+    >requestIdleCallback让浏览器在'有空'的时候就执行我们的回调，这个回调会传入一个期限，表示浏览器有多少时间供我们执行, 为了不耽误事，我们最好在这个时间范围内执行完毕。
 
     Fiber Tree  
     Fiber之前React运行时存在三种实例
@@ -295,7 +300,8 @@ componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)
     其中workInprogess和effect仅在更新时存在
     
     Fiber节点，实现了链表的树结构  
-    <img src="./fiber_node.png"/>  
+    <img src="./fiber_tree.png"/>  
+
     Fiber reconciler 2个阶段  
     阶段1 （可中断）render/reconciliation 通过构造workInProgress tree得出change  
     阶段2 （不可中断）commit 应用这些DOM change  
@@ -311,6 +317,7 @@ componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)
     构建workInProgress tree的过程就是diff的过程，通过requestIdleCallback来调度执行一组任务，每完成一个任务后回来看看有没有插队的（更紧急的），每完成一组任务，把时间控制权交还给主线程，直到下一次requestIdleCallback回调再继续构建workInProgress tree  
     comimit阶段 不中断直接完成  
     处理effect list（包括3种处理：更新DOM树、调用组件生命周期函数以及更新ref等内部状态）  
+    workInProgress tree是一种双缓冲技术，即在workInProgress tree构造完毕后一次性提交，直接丢掉旧的fiber tree，能够直接复用旧的fiber对象，同时节省了内存分配。  
 
     优先级策略  
     每个工作单元运行有6种优先级：  
