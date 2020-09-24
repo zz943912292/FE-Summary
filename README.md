@@ -278,9 +278,20 @@ componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)
       - 给不同类型的更新赋予优先级   
       - 并发方面新的基础能力  
 
-    Fiber是什么？  
+    Fiber给出的答案？  
     React Fiber 的思想和协程的概念是契合的: React 渲染的过程可以被中断，可以将控制权交回浏览器，让位给高优先级的任务，浏览器空闲后再恢复渲染。  
     使用requestIdleCallback API实现，由于浏览器支持有限，React自己实现了它。  
+    ```Javascript
+      interface IdleDealine {
+        didTimeout: boolean // 表示任务执行是否超过约定时间
+        timeRemaining(): DOMHighResTimeStamp // 任务可供执行的剩余时间
+      }
+
+      window.requestIdleCallback(
+        callback: (dealine: IdleDeadline) => void,
+        option?: {timeout: number}
+      )
+    ```
     >requestIdleCallback让浏览器在'有空'的时候就执行我们的回调，这个回调会传入一个期限，表示浏览器有多少时间供我们执行, 为了不耽误事，我们最好在这个时间范围内执行完毕。
 
     Fiber Tree  
@@ -315,8 +326,11 @@ componentDidUpdate 或者 setState 的回调函数（setState(updater, callback)
     7. 如果没有下一个工作单元了（回到了workInProgress tree的根节点），第1阶段结束，进入pendingCommit状态   
 
     构建workInProgress tree的过程就是diff的过程，通过requestIdleCallback来调度执行一组任务，每完成一个任务后回来看看有没有插队的（更紧急的），每完成一组任务，把时间控制权交还给主线程，直到下一次requestIdleCallback回调再继续构建workInProgress tree  
+    
     comimit阶段 不中断直接完成  
     处理effect list（包括3种处理：更新DOM树、调用组件生命周期函数以及更新ref等内部状态）  
+    更新commit到DOM树  
+
     workInProgress tree是一种双缓冲技术，即在workInProgress tree构造完毕后一次性提交，直接丢掉旧的fiber tree，能够直接复用旧的fiber对象，同时节省了内存分配。  
 
     优先级策略  
